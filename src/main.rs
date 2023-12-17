@@ -1,4 +1,4 @@
-// use std::time::Instant;
+use std::time::Instant;
 // use std::cmp::min;
 use rand::prelude::*;
 
@@ -61,10 +61,10 @@ fn main() {
     // print_matrix(&array1);
     // print_matrix(&array2);
 
-    // let start = Instant::now(); 
+    let start = Instant::now(); 
     naive_multiply(&array1, &array2, &mut array3);
-    // let duration = start.elapsed();
-    // println!("Time elapsed in naive_multiply() is: {:?}", duration);
+    let duration = start.elapsed();
+    println!("Time elapsed in naive_multiply() is: {:?}", duration);
 
     // let start = Instant::now(); 
     // opt_multiply(&array1, &array2, &mut array4);
