@@ -1,8 +1,10 @@
 use std::time::Instant;
+use ndarray::Array;
+
 // use std::cmp::min;
 use rand::prelude::*;
 
-const N:usize = 2000;
+const N:usize = 10;
 // const D:usize = 50;
 
 fn generate_matrix(is_random: bool) -> Vec<u32> {
@@ -40,6 +42,16 @@ fn naive_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
     }
 }
 
+fn naive_iter_mult(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
+    for (ci, ai) in res_arr.chunks_exact_mut(N).zip(arr1.chunks_exact(N)){
+        for (aik, bk) in ai.iter().zip(arr2.chunks_exact(N)) {
+            for (cij, bkj) in ci.iter_mut().zip(bk.iter()){
+                *cij += (*aik) * (*bkj);
+            }
+        }
+    }
+}
+
 // fn opt_multiply(arr1: &Vec<u32>, arr2: &Vec<u32>, res_arr: &mut Vec<u32>) {
 //     for o in 0..=(N/D) {
 //         for i in 0..N {
@@ -57,6 +69,11 @@ fn main() {
     let array1 = generate_matrix(true);
     let array2 = generate_matrix(true);
     let mut array3 = generate_matrix(false);
+    let mut array4 = array3.clone();
+
+    let nd_arr1 = Array::from_vec(array1.clone()).into_shape((N, N)).unwrap();
+    let nd_arr2 = Array::from_vec(array2.clone()).into_shape((N, N)).unwrap();
+    //
     // let mut array4 = generate_matrix(false);
     // print_matrix(&array1);
     // print_matrix(&array2);
@@ -65,6 +82,20 @@ fn main() {
     naive_multiply(&array1, &array2, &mut array3);
     let duration = start.elapsed();
     println!("Time elapsed in naive_multiply() is: {:?}", duration);
+
+    let start = Instant::now(); 
+    naive_iter_mult(&array1, &array2, &mut array4);
+    let duration = start.elapsed();
+    println!("Time elapsed in naive_iter_multiply() is: {:?}", duration);
+
+    let start = Instant::now(); 
+    let _res_arr = nd_arr1.dot(&nd_arr2);
+    let duration = start.elapsed();
+    println!("Time elapsed in ndarray_multiply() is: {:?}", duration);
+
+    println!("{:?}", array3);
+    println!("{:?}", array4);
+    println!("{:?}", _res_arr);
 
     // let start = Instant::now(); 
     // opt_multiply(&array1, &array2, &mut array4);
