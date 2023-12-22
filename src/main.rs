@@ -1,11 +1,11 @@
 use std::time::Instant;
 use ndarray::Array;
 
-// use std::cmp::min;
+use std::cmp::min;
 use rand::prelude::*;
 
-const N:usize = 10;
-// const D:usize = 50;
+const N:usize = 2000;
+const D:usize = 50;
 
 fn generate_matrix(is_random: bool) -> Vec<u32> {
     let mut rng: ThreadRng = rand::thread_rng();
@@ -52,24 +52,29 @@ fn naive_iter_mult(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
     }
 }
 
-// fn opt_multiply(arr1: &Vec<u32>, arr2: &Vec<u32>, res_arr: &mut Vec<u32>) {
-//     for o in 0..=(N/D) {
-//         for i in 0..N {
-//             for j in 0..N {
-//                 for k in o * D..min(N, (o + 1) * D) {
-//                     res_arr[i * N + j] += arr1[i * N + k] * arr2[k * N + j]
-//                 }
-//             }
-//         }
+fn opt_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
+    for o in 0..=(N/D) {
+        for i in 0..N {
+            for j in 0..N {
+                let mut sum: u32 = 0;
+                for k in o * D..min(N, (o + 1) * D) {
+                    unsafe {
+                        sum += *arr1.get_unchecked(i * N + k) * *arr2.get_unchecked(k * N + j)
+                    }
+                }
+                res_arr[i * N + j] = sum;
+            }
+        }
 
-//     }
-// }
+    }
+}
 
 fn main() {
     let array1 = generate_matrix(true);
     let array2 = generate_matrix(true);
     let mut array3 = generate_matrix(false);
     let mut array4 = array3.clone();
+    let mut array5 = array3.clone();
 
     let nd_arr1 = Array::from_vec(array1.clone()).into_shape((N, N)).unwrap();
     let nd_arr2 = Array::from_vec(array2.clone()).into_shape((N, N)).unwrap();
@@ -89,12 +94,18 @@ fn main() {
     println!("Time elapsed in naive_iter_multiply() is: {:?}", duration);
 
     let start = Instant::now(); 
+    opt_multiply(&array1, &array2, &mut array5);
+    let duration = start.elapsed();
+    println!("Time elapsed in opt_multiply() is: {:?}", duration);
+
+    let start = Instant::now(); 
     let _res_arr = nd_arr1.dot(&nd_arr2);
     let duration = start.elapsed();
     println!("Time elapsed in ndarray_multiply() is: {:?}", duration);
 
     println!("{:?}", array3);
     println!("{:?}", array4);
+    println!("{:?}", array5);
     println!("{:?}", _res_arr);
 
     // let start = Instant::now(); 
