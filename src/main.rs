@@ -1,11 +1,11 @@
-use std::time::Instant;
 use ndarray::Array;
+use std::time::Instant;
 
-use std::cmp::min;
 use rand::prelude::*;
+use std::cmp::min;
 
-const N:usize = 2000;
-const D:usize = 50;
+const N: usize = 2000;
+const D: usize = 50;
 
 fn generate_matrix(is_random: bool) -> Vec<u32> {
     let mut rng: ThreadRng = rand::thread_rng();
@@ -19,14 +19,6 @@ fn generate_matrix(is_random: bool) -> Vec<u32> {
     }
     arr
 }
-
-// #[allow(dead_code)]
-// fn print_matrix(arr: &[[usize; N]; N]) {
-//     for line in arr.iter(){
-//         println!("{:?}", line);
-//     }
-//     println!()
-// }
 
 fn naive_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
     for i in 0..N {
@@ -43,9 +35,9 @@ fn naive_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
 }
 
 fn naive_iter_mult(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
-    for (ci, ai) in res_arr.chunks_exact_mut(N).zip(arr1.chunks_exact(N)){
+    for (ci, ai) in res_arr.chunks_exact_mut(N).zip(arr1.chunks_exact(N)) {
         for (aik, bk) in ai.iter().zip(arr2.chunks_exact(N)) {
-            for (cij, bkj) in ci.iter_mut().zip(bk.iter()){
+            for (cij, bkj) in ci.iter_mut().zip(bk.iter()) {
                 *cij += (*aik) * (*bkj);
             }
         }
@@ -53,7 +45,7 @@ fn naive_iter_mult(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
 }
 
 fn opt_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
-    for o in 0..=(N/D) {
+    for o in 0..=(N / D) {
         for i in 0..N {
             for j in 0..N {
                 let mut sum: u32 = 0;
@@ -65,53 +57,57 @@ fn opt_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
                 res_arr[i * N + j] = sum;
             }
         }
-
     }
 }
 
-fn main() {
-    let array1 = generate_matrix(true);
-    let array2 = generate_matrix(true);
-    let mut array3 = generate_matrix(false);
-    let mut array4 = array3.clone();
-    let mut array5 = array3.clone();
-
-    let nd_arr1 = Array::from_vec(array1.clone()).into_shape((N, N)).unwrap();
-    let nd_arr2 = Array::from_vec(array2.clone()).into_shape((N, N)).unwrap();
-    //
-    // let mut array4 = generate_matrix(false);
-    // print_matrix(&array1);
-    // print_matrix(&array2);
-
-    let start = Instant::now(); 
-    naive_multiply(&array1, &array2, &mut array3);
-    let duration = start.elapsed();
-    println!("Time elapsed in naive_multiply() is: {:?}", duration);
-
-    let start = Instant::now(); 
-    naive_iter_mult(&array1, &array2, &mut array4);
-    let duration = start.elapsed();
-    println!("Time elapsed in naive_iter_multiply() is: {:?}", duration);
-
-    let start = Instant::now(); 
-    opt_multiply(&array1, &array2, &mut array5);
-    let duration = start.elapsed();
-    println!("Time elapsed in opt_multiply() is: {:?}", duration);
-
-    let start = Instant::now(); 
+fn nd_mul_wrapper(arr1: Vec<u32>, arr2: Vec<u32>) {
+    let nd_arr1 = Array::from_vec(arr1.clone()).into_shape((N, N)).unwrap();
+    let nd_arr2 = Array::from_vec(arr2.clone()).into_shape((N, N)).unwrap();
+    let start = Instant::now();
     let _res_arr = nd_arr1.dot(&nd_arr2);
     let duration = start.elapsed();
     println!("Time elapsed in ndarray_multiply() is: {:?}", duration);
+}
 
-    println!("{:?}", array3);
-    println!("{:?}", array4);
-    println!("{:?}", array5);
-    println!("{:?}", _res_arr);
+fn test_func<F>(mut mul_func: F, arr1: &[u32], arr2: &[u32], mut res_arr: &mut [u32], f_name: &str)
+where
+    F: FnMut(&[u32], &[u32], &mut [u32]),
+{
+    let start = Instant::now();
+    mul_func(&arr1, &arr2, &mut res_arr);
+    let duration = start.elapsed();
+    println!("Time elapsed in {}() is: {:?}", f_name, duration);
+}
 
-    // let start = Instant::now(); 
-    // opt_multiply(&array1, &array2, &mut array4);
-    // let duration = start.elapsed();
-    // println!("Time elapsed in opt_multiply() is: {:?}", duration);
-    // print_matrix(&array3);
+fn main() {
+    let left_mtx = generate_matrix(true);
+    let right_mtx = generate_matrix(true);
 
+    let mut output_mtx1 = generate_matrix(false);
+    let mut output_mtx2 = output_mtx1.clone();
+    let mut output_mtx3 = output_mtx1.clone();
+
+    test_func(
+        naive_multiply,
+        &left_mtx,
+        &right_mtx,
+        &mut output_mtx1,
+        "naive_multiply",
+    );
+    test_func(
+        naive_iter_mult,
+        &left_mtx,
+        &right_mtx,
+        &mut output_mtx2,
+        "naive_iter_mult",
+    );
+    test_func(
+        opt_multiply,
+        &left_mtx,
+        &right_mtx,
+        &mut output_mtx3,
+        "opt_multiply",
+    );
+
+    nd_mul_wrapper(left_mtx.clone(), right_mtx.clone());
 }
