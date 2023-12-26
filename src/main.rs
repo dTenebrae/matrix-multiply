@@ -26,7 +26,7 @@ fn naive_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
             let mut sum = 0;
             for k in 0..N {
                 unsafe {
-                    sum += *arr1.get_unchecked(i * N + k) * *arr2.get_unchecked(k * N + j);
+                    sum += (*arr1.get_unchecked(i * N + k)) * (*arr2.get_unchecked(k * N + j));
                 }
             }
             res_arr[i * N + j] = sum;
@@ -69,12 +69,12 @@ fn nd_mul_wrapper(arr1: Vec<u32>, arr2: Vec<u32>) {
     println!("Time elapsed in ndarray_multiply() is: {:?}", duration);
 }
 
-fn test_func<F>(mut mul_func: F, arr1: &[u32], arr2: &[u32], mut res_arr: &mut [u32], f_name: &str)
+fn test_func<F>(mut mul_func: F, arr1: &[u32], arr2: &[u32], res_arr: &mut [u32], f_name: &str)
 where
     F: FnMut(&[u32], &[u32], &mut [u32]),
 {
     let start = Instant::now();
-    mul_func(&arr1, &arr2, &mut res_arr);
+    mul_func(arr1, arr2, res_arr);
     let duration = start.elapsed();
     println!("Time elapsed in {}() is: {:?}", f_name, duration);
 }
