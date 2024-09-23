@@ -1,4 +1,3 @@
-use ndarray::Array;
 use std::time::Instant;
 
 use rand::prelude::*;
@@ -60,15 +59,6 @@ fn opt_multiply(arr1: &[u32], arr2: &[u32], res_arr: &mut [u32]) {
     }
 }
 
-fn nd_mul_wrapper(arr1: Vec<u32>, arr2: Vec<u32>) {
-    let nd_arr1 = Array::from_vec(arr1.clone()).into_shape((N, N)).unwrap();
-    let nd_arr2 = Array::from_vec(arr2.clone()).into_shape((N, N)).unwrap();
-    let start = Instant::now();
-    let _res_arr = nd_arr1.dot(&nd_arr2);
-    let duration = start.elapsed();
-    println!("Time elapsed in ndarray_multiply() is: {:?}", duration);
-}
-
 fn test_func<F>(mut mul_func: F, arr1: &[u32], arr2: &[u32], res_arr: &mut [u32], f_name: &str)
 where
     F: FnMut(&[u32], &[u32], &mut [u32]),
@@ -108,6 +98,4 @@ fn main() {
         &mut output_mtx3,
         "opt_multiply",
     );
-
-    nd_mul_wrapper(left_mtx.clone(), right_mtx.clone());
 }
